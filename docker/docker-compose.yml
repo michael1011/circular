@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+  bitcoind:
+    hostname: bitcoind
+    image: boltz/bitcoin-core:23.0
+    command: "-regtest -fallbackfee=0.00000253 -zmqpubrawtx=tcp://0.0.0.0:29000 -zmqpubrawblock=tcp://0.0.0.0:29001 -txindex -rpcallowip=0.0.0.0/0 -rpcbind=0.0.0.0 -rpcuser=balanzierer -rpcpassword=balanzierer"
+    expose:
+      - 29000
+      - 29001
+      - 18443
+      - 18444
+  clightning-1:
+    hostname: clightning-1
+    depends_on:
+      - bitcoind
+    image: boltz/c-lightning:0.12.1
+    entrypoint: "sh -c 'sleep 15 && lightningd --large-channels --network regtest --bind-addr=0.0.0.0:9735 --bitcoin-rpcconnect=bitcoind --bitcoin-rpcport=18443 --bitcoin-rpcuser=balanzierer --bitcoin-rpcpassword=balanzierer'"
+    expose:
+      - 9735
+    volumes:
+      - ./data/clightning-1:/root/.lightning/
+      - ./data/circular:/root/.lightning/plugins/circular
+
+  clightning-2:
+    hostname: clightning-2
+    depends_on:
+      - bitcoind
+    image: boltz/c-lightning:0.12.1
+    entrypoint: "sh -c 'sleep 15 && lightningd --large-channels --network regtest --bind-addr=0.0.0.0:9735 --bitcoin-rpcconnect=bitcoind --bitcoin-rpcport=18443 --bitcoin-rpcuser=balanzierer --bitcoin-rpcpassword=balanzierer'"
+    expose:
+      - 9735
+    volumes:
+      - ./data/clightning-2:/root/.lightning/
+      - ./data/circular:/root/.lightning/plugins/circular
+
+  clightning-3:
+    hostname: clightning-3
+    depends_on:
+      - bitcoind
+    image: boltz/c-lightning:0.12.1
+    entrypoint: "sh -c 'sleep 15 && lightningd --large-channels --network regtest --bind-addr=0.0.0.0:9735 --bitcoin-rpcconnect=bitcoind --bitcoin-rpcport=18443 --bitcoin-rpcuser=balanzierer --bitcoin-rpcpassword=balanzierer'"
+    expose:
+      - 9735
+    volumes:
+      - ./data/clightning-3:/root/.lightning/
+      - ./data/circular:/root/.lightning/plugins/circular

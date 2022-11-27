@@ -17,3 +17,7 @@ circular
 # Dependency directories (remove the comment below to include it)
 # vendor/
 *.idea
+
+docker/data
+docker/circular
+*.log
