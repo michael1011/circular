@@ -5,6 +5,7 @@ import (
 	"circular/util"
 	"fmt"
 	"github.com/elementsproject/glightning/glightning"
+	"golang.org/x/net/websocket"
 	"log"
 	"math/rand"
 	"sync"
@@ -40,6 +41,9 @@ type Node struct {
 	DB                  *Store
 	LiquidityUpdateChan chan *LiquidityUpdate
 	Stopped             bool
+
+	activeWebSockets     []*websocket.Conn
+	activeWebSocketsLock sync.Mutex
 }
 
 func GetNode() *Node {
