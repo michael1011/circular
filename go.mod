@@ -6,9 +6,11 @@ require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/elementsproject/glightning v0.0.0-20221013194807-73978c84cee8
 	github.com/gammazero/deque v0.2.0
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.7.0
 	github.com/virtuald/go-paniclog v0.0.0-20190812204905-43a7fa316459
+	golang.org/x/net v0.2.0
 )
 
 require (
@@ -27,7 +29,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.opencensus.io v0.22.5 // indirect
-	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	golang.org/x/sys v0.2.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )

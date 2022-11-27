@@ -3,6 +3,7 @@ package main
 import (
 	"circular/graph"
 	"circular/node"
+	"fmt"
 	"github.com/elementsproject/glightning/glightning"
 	"log"
 )
@@ -34,5 +35,13 @@ func registerOptions(p *glightning.Plugin) {
 		true); err != nil {
 
 		log.Fatalln("error registering option circular-liquidity-reset:", err)
+	}
+
+	if err := p.RegisterOption(glightning.NewStringOption(
+		node.OptionWebSocketEndpoint,
+		"Endpoint on which circular should expose its WebSocket; set empty to disable",
+		node.DefaultWebSocketEndpoint,
+	)); err != nil {
+		log.Fatalln(fmt.Sprintf("error registering option %s: %s", node.OptionWebSocketEndpoint, err.Error()))
 	}
 }

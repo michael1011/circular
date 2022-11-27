@@ -16,6 +16,10 @@ const (
 	DEFAULT_PEER_REFRESH_INTERVAL    = 30  // seconds
 	DEFAULT_LIQUIDITY_RESET_INTERVAL = 300 // minutes
 	DEFAULT_RPC_TIMEOUT              = 60  // seconds
+
+	OptionWebSocketEndpoint = "circular-websocket"
+
+	DefaultWebSocketEndpoint = "127.0.0.1:8222"
 )
 
 var (
@@ -88,6 +92,8 @@ func (n *Node) Init(lightning *glightning.Lightning, plugin *glightning.Plugin, 
 
 	n.Logln(glightning.Debug, "setting up cronjobs")
 	n.setupCronJobs(options)
+
+	n.startWebsocket(options)
 
 	n.Logln(glightning.Info, "node initialized")
 }
