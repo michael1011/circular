@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
-	github.com/elementsproject/glightning v0.0.0-20220502095901-74f998c51367
+	github.com/elementsproject/glightning v0.0.0-20221013194807-73978c84cee8
 	github.com/gammazero/deque v0.2.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.7.0
