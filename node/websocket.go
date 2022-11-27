@@ -2,6 +2,7 @@ package node
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/elementsproject/glightning/glightning"
 	"github.com/mitchellh/mapstructure"
 	"golang.org/x/net/websocket"
@@ -31,6 +32,30 @@ type websocketResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
+func sendActionFailed(ws *websocket.Conn, action string, err error) error {
+	return websocket.JSON.Send(ws, websocketResponse{
+		Error: fmt.Sprintf("could not %s: %s", action, err),
+	})
+}
+
+func forwardRequest(ws *websocket.Conn, action string, data, req any, cb func() (any, error)) error {
+	if req != nil {
+		err := mapstructure.Decode(data, req)
+		if err != nil {
+			return sendActionFailed(ws, action, err)
+		}
+	}
+
+	resData, err := cb()
+	if err != nil {
+		return sendActionFailed(ws, action, err)
+	}
+
+	return websocket.JSON.Send(ws, websocketResponse{
+		Data: resData,
+	})
+}
+
 func (n *Node) handleWebsocket(ws *websocket.Conn) {
 	var data websocketMessage
 
@@ -51,58 +76,21 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 
 		switch strings.ToLower(data.Action) {
 		case actionGetInfo:
-			var nodeInfo *glightning.NodeInfo
-			nodeInfo, err = n.lightning.GetInfo()
-
-			if err != nil {
-				err = websocket.JSON.Send(ws, websocketResponse{
-					Error: "could not getinfo: " + err.Error(),
-				})
-				break
-			}
-
-			err = websocket.JSON.Send(ws, websocketResponse{
-				Data: nodeInfo,
+			err = forwardRequest(ws, actionGetInfo, data.Data, nil, func() (any, error) {
+				return n.lightning.GetInfo()
 			})
 			break
 
 		case actionListPeers:
-			var peers []*glightning.Peer
-			peers, err = n.lightning.ListPeers()
-
-			if err != nil {
-				err = websocket.JSON.Send(ws, websocketResponse{
-					Error: "could not listpeers: " + err.Error(),
-				})
-				break
-			}
-
-			err = websocket.JSON.Send(ws, websocketResponse{
-				Data: peers,
+			err = forwardRequest(ws, actionListPeers, data.Data, nil, func() (any, error) {
+				return n.lightning.ListPeers()
 			})
 			break
 
 		case actionGetNode:
 			var nodeReq websocketGetNodeRequest
-			err = mapstructure.Decode(data.Data, &nodeReq)
-			if err != nil {
-				err = websocket.JSON.Send(ws, websocketResponse{
-					Error: "could not getnode: " + err.Error(),
-				})
-				break
-			}
-
-			var node *glightning.Node
-			node, err = n.lightning.GetNode(nodeReq.NodeId)
-			if err != nil {
-				err = websocket.JSON.Send(ws, websocketResponse{
-					Error: "could not getnode: " + err.Error(),
-				})
-				break
-			}
-
-			err = websocket.JSON.Send(ws, websocketResponse{
-				Data: node,
+			err = forwardRequest(ws, actionGetNode, data.Data, &nodeReq, func() (any, error) {
+				return n.lightning.GetNode(nodeReq.NodeId)
 			})
 			break
 
