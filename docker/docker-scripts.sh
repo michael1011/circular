@@ -2,8 +2,9 @@
 export COMPOSE_PROJECT_NAME=balanzierer
 
 balanzierer-build(){
-    docker build -t balanzierer .
-    docker run --volume $(pwd)/docker/circular:/root/circular balanzierer
+    docker build -t balanzierer ..
+    docker run --volume $(pwd)/circular:/go/circular balanzierer
+    sudo chmod -R 777 $(pwd)/circular
 }
 
 bitcoin-cli-sim() {
@@ -85,8 +86,8 @@ lightning-init(){
   echo "mining 10 blocks..."
   bitcoin-cli-sim -generate 10 > /dev/null
 
-  echo "wait for 15s..."
-  sleep 15 # else blockheight tests fail for cln
+  echo "wait for 30s..."
+  sleep 30 # else blockheight tests fail for cln
 
   lightning-sync
 
@@ -122,8 +123,8 @@ lightning-init(){
   lightning-sync
 
 
-  echo "wait for 15s... warmup..."
-  sleep 15
+  echo "wait for 20s... warmup..."
+  sleep 20
 
 }
 
