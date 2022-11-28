@@ -18,5 +18,5 @@ balanzierer-build
 ```console
 cd docker
 source docker-scripts.sh
-lightning-cli-sim 1 plugin start circular/circular
+lightning-cli-sim 1 plugin start /circular/circular
 ```
