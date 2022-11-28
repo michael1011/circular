@@ -6,7 +6,7 @@ import (
 	"github.com/elementsproject/glightning/jrpc2"
 )
 
-type RebalanceByScid struct {
+type ByScidCommand struct {
 	OutScid  string     `json:"outscid"`
 	InScid   string     `json:"inscid"`
 	Amount   uint64     `json:"amount,omitempty"`
@@ -16,15 +16,15 @@ type RebalanceByScid struct {
 	Node     *node.Node `json:"-"`
 }
 
-func (r *RebalanceByScid) Name() string {
+func (r *ByScidCommand) Name() string {
 	return "circular"
 }
 
-func (r *RebalanceByScid) New() interface{} {
-	return &RebalanceByScid{}
+func (r *ByScidCommand) New() interface{} {
+	return &ByScidCommand{}
 }
 
-func (r *RebalanceByScid) Call() (jrpc2.Result, error) {
+func (r *ByScidCommand) Call() (jrpc2.Result, error) {
 	r.Node = node.GetNode()
 	if r.InScid == "" || r.OutScid == "" {
 		return nil, util.ErrNoRequiredParameter

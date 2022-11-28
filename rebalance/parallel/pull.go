@@ -3,6 +3,7 @@ package parallel
 import (
 	"circular/graph"
 	rebalance2 "circular/rebalance"
+	"circular/types"
 	"circular/util"
 	"github.com/elementsproject/glightning/glightning"
 	"github.com/elementsproject/glightning/jrpc2"
@@ -142,7 +143,7 @@ func (r *RebalancePull) GetCandidateDirection(id string) string {
 }
 
 // EnqueueCandidate puts a candidate at the front of the queue
-func (r *RebalancePull) EnqueueCandidate(result *rebalance2.Result) {
+func (r *RebalancePull) EnqueueCandidate(result *types.Result) {
 	scid := result.Route.Hops[0].ShortChannelId
 	candidate, err := r.Node.GetOutgoingChannelFromScid(scid)
 	if err != nil {
@@ -155,7 +156,7 @@ func (r *RebalancePull) EnqueueCandidate(result *rebalance2.Result) {
 	r.QueueLock.Unlock()
 }
 
-func (r *RebalancePull) AddSuccess(result *rebalance2.Result) {
+func (r *RebalancePull) AddSuccess(result *types.Result) {
 	r.Node.Graph.LockAliases()
 	defer r.Node.Graph.UnlockAliases()
 	alias := "unknown"

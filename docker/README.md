@@ -7,7 +7,7 @@ chmod +x ./tests
 ./tests
 ```
 
-## build go corelighning plugin for regtest instances
+## build go corelightning plugin for regtest instances
 ```console
 cd docker
 source docker-scripts.sh

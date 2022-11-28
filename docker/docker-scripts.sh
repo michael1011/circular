@@ -4,7 +4,7 @@ export COMPOSE_PROJECT_NAME=balanzierer
 balanzierer-build(){
     sudo rm -rf $(pwd)/circular
     docker build -t balanzierer ..
-    docker run --volume $(pwd)/circular:/go/circular balanzierer
+    docker run --rm --volume $(pwd)/circular:/go/circular balanzierer
     sudo chmod -R 777 $(pwd)/circular
 }
 

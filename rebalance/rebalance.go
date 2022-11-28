@@ -3,6 +3,7 @@ package rebalance
 import (
 	"circular/graph"
 	"circular/node"
+	"circular/types"
 	"circular/util"
 	"errors"
 	"fmt"
@@ -42,7 +43,7 @@ func (r *Rebalance) Setup() error {
 	return nil
 }
 
-func (r *Rebalance) Run() *Result {
+func (r *Rebalance) Run() *types.Result {
 	var (
 		maxHops   = 3
 		i         = 1
@@ -102,7 +103,7 @@ func (r *Rebalance) Run() *Result {
 		i++
 	}
 
-	failure := NewResult("failure", r.Amount/1000, r.OutChannel.Destination, r.InChannel.Source)
+	failure := types.NewResult("failure", r.Amount/1000, r.OutChannel.Destination, r.InChannel.Source)
 	failure.Attempts = uint64(i - 1)
 	failure.Message = "rebalance failed after " + strconv.Itoa(int(failure.Attempts)) + " attempts."
 	failure.Message += lastError
@@ -110,11 +111,11 @@ func (r *Rebalance) Run() *Result {
 	return failure
 }
 
-func (r *Rebalance) runAttempt(maxHops int) (*Result, error) {
+func (r *Rebalance) runAttempt(maxHops int) (*types.Result, error) {
 	if r.Node.Stopped {
 		return nil, util.ErrCircularStopped
 	}
-	
+
 	if err := r.validateLiquidityParameters(r.OutChannel, r.InChannel); err != nil {
 		return nil, err
 	}
@@ -124,7 +125,7 @@ func (r *Rebalance) runAttempt(maxHops int) (*Result, error) {
 		return nil, err
 	}
 
-	result := NewResult("success", r.Amount/1000,
+	result := types.NewResult("success", r.Amount/1000,
 		r.OutChannel.Destination, r.InChannel.Source)
 
 	result.Fee = route.Fee

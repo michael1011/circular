@@ -1,7 +1,8 @@
 package node
 
 import (
-	"encoding/json"
+	"circular/graph"
+	"circular/types"
 	"fmt"
 	"github.com/elementsproject/glightning/glightning"
 	"github.com/mitchellh/mapstructure"
@@ -13,9 +14,20 @@ import (
 )
 
 const (
-	actionGetInfo   = "getinfo"
-	actionListPeers = "listpeers"
-	actionGetNode   = "getnode"
+	// Requests
+	actionPing            = "ping"
+	actionGetInfo         = "getinfo"
+	actionListPeers       = "listpeers"
+	actionGetNode         = "getnode"
+	actionRebalanceByScid = "rebalancebyscid"
+	actionRebalanceStop   = "stop"
+	actionRebalanceResume = "resume"
+
+	// Responses
+	actionPong            = "pong"
+	actionRebalanceUpdate = "rebalanceupdate"
+	actionRebalanceEnd    = "rebalanceend"
+	actionRebalanceFailed = "rebalancefailed"
 )
 
 type websocketMessage struct {
@@ -28,8 +40,15 @@ type websocketGetNodeRequest struct {
 }
 
 type websocketResponse struct {
-	Data  any    `json:"data,omitempty"`
-	Error string `json:"error,omitempty"`
+	Action string `json:"action"`
+	Data   any    `json:"data,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
+
+type channelInfo struct {
+	*glightning.Peer
+	Alias string `json:"alias"`
+	Color string `json:"color"`
 }
 
 func sendActionFailed(ws *websocket.Conn, action string, err error) error {
@@ -51,12 +70,21 @@ func forwardRequest(ws *websocket.Conn, action string, data, req any, cb func() 
 		return sendActionFailed(ws, action, err)
 	}
 
+	if resData == nil {
+		return nil
+	}
+
 	return websocket.JSON.Send(ws, websocketResponse{
-		Data: resData,
+		Action: action,
+		Data:   resData,
 	})
 }
 
 func (n *Node) handleWebsocket(ws *websocket.Conn) {
+	n.activeWebSocketsLock.Lock()
+	n.activeWebSockets = append(n.activeWebSockets, ws)
+	n.activeWebSocketsLock.Unlock()
+
 	var data websocketMessage
 
 	for {
@@ -64,15 +92,21 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 
 		if err != nil {
 			if err == io.EOF {
+				n.activeWebSocketsLock.Lock()
+				for i, wsComp := range n.activeWebSockets {
+					if ws == wsComp {
+						n.activeWebSockets[i] = n.activeWebSockets[len(n.activeWebSockets)-1]
+						n.activeWebSockets = n.activeWebSockets[:len(n.activeWebSockets)-1]
+						break
+					}
+				}
+				n.activeWebSocketsLock.Unlock()
 				break
 			}
 
 			n.Logln(glightning.Info, "could not read WebSocket message: "+err.Error())
 			continue
 		}
-
-		msg, _ := json.Marshal(data)
-		n.Logln(glightning.Info, "got websocket msg: "+string(msg))
 
 		switch strings.ToLower(data.Action) {
 		case actionGetInfo:
@@ -83,7 +117,26 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 
 		case actionListPeers:
 			err = forwardRequest(ws, actionListPeers, data.Data, nil, func() (any, error) {
-				return n.lightning.ListPeers()
+				peers, err := n.lightning.ListPeers()
+				if err != nil {
+					return nil, err
+				}
+
+				channels := make([]*channelInfo, len(peers))
+				for i, peer := range peers {
+					node, err := n.lightning.GetNode(peer.Id)
+					if err != nil {
+						return nil, err
+					}
+
+					channels[i] = &channelInfo{
+						Peer:  peer,
+						Alias: node.Alias,
+						Color: node.Color,
+					}
+				}
+
+				return channels, nil
 			})
 			break
 
@@ -94,10 +147,56 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 			})
 			break
 
+		case actionRebalanceByScid:
+			var rebalanceScid types.RebalanceByScid
+			err = forwardRequest(ws, actionRebalanceByScid, data.Data, &rebalanceScid, func() (any, error) {
+				go func() {
+					var res types.Result
+					err := n.lightning.Request(rebalanceScid, &res)
+					if err != nil {
+						n.websocketBroadcast(actionRebalanceFailed, nil, err.Error())
+						return
+					}
+
+					n.websocketBroadcast(actionRebalanceEnd, res, nil)
+				}()
+
+				return nil, nil
+			})
+			break
+
+		case actionRebalanceResume:
+			var res types.Resume
+			err = forwardRequest(ws, actionRebalanceResume, data.Data, &res, func() (any, error) {
+				err := n.lightning.Request(types.Resume{}, &res)
+				if err != nil {
+					return nil, err
+				}
+				return res, nil
+			})
+			break
+
+		case actionRebalanceStop:
+			var res types.Stop
+			err = forwardRequest(ws, actionRebalanceStop, data.Data, &res, func() (any, error) {
+				err := n.lightning.Request(types.Stop{}, &res)
+				if err != nil {
+					return nil, err
+				}
+				return res, nil
+			})
+			break
+
+		case actionPing:
+			err = websocket.JSON.Send(ws, websocketResponse{
+				Action: actionPong,
+			})
+
 		default:
 			err = websocket.JSON.Send(ws, websocketResponse{
 				Error: "unknown action",
 			})
+			break
 		}
 
 		if err != nil {
@@ -117,11 +216,40 @@ func (n *Node) startWebsocket(options map[string]glightning.Option) {
 
 	n.Logln(glightning.Info, "enabling WebSocket on: "+endpoint)
 
-	http.Handle("/", websocket.Handler(n.handleWebsocket))
+	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		s := websocket.Server{Handler: websocket.Handler(n.handleWebsocket)}
+		s.ServeHTTP(writer, request)
+	})
 	go func() {
 		err := http.ListenAndServe(endpoint, nil)
 		if err != nil {
 			log.Fatalln("error starting WebSocket: " + err.Error())
 		}
 	}()
+}
+
+func (n *Node) websocketBroadcast(action string, msg any, err any) {
+	n.activeWebSocketsLock.Lock()
+	defer n.activeWebSocketsLock.Unlock()
+
+	data := websocketResponse{
+		Action: action,
+		Data:   msg,
+	}
+
+	if err != nil {
+		data.Error = err.(string)
+	}
+
+	for _, ws := range n.activeWebSockets {
+		err := websocket.JSON.Send(ws, data)
+		if err != nil {
+			n.Logln(glightning.Info, "could not broadcast WebSocket message: "+err.Error())
+			break
+		}
+	}
+}
+
+func (n *Node) SendRebalanceAttempt(route *graph.PrettyRoute) {
+	n.websocketBroadcast(actionRebalanceUpdate, route, nil)
 }

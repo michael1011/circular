@@ -52,6 +52,7 @@ func (r *Rebalance) tryRoute(maxHops int) (*graph.PrettyRoute, error) {
 	}
 	r.Node.Logln(glightning.Debug, prettyRoute)
 	r.Node.Logln(glightning.Info, prettyRoute.Simple())
+	r.Node.SendRebalanceAttempt(prettyRoute)
 
 	_, err = r.Node.SendPay(route, paymentSecretHash)
 	if err != nil {

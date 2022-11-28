@@ -1,7 +1,7 @@
 package parallel
 
 import (
-	"circular/rebalance"
+	"circular/types"
 	"fmt"
 	"github.com/elementsproject/glightning/glightning"
 	"github.com/elementsproject/glightning/jrpc2"
@@ -75,7 +75,7 @@ func (r *AbstractRebalance) WaitForResult() (jrpc2.Result, error) {
 	return r.Result, nil
 }
 
-func (r *AbstractRebalance) UpdateAmounts(result *rebalance.Result) {
+func (r *AbstractRebalance) UpdateAmounts(result *types.Result) {
 	r.AmountLock.Lock()
 	defer r.AmountLock.Unlock()
 

@@ -1,4 +1,4 @@
-package rebalance
+package types
 
 import "circular/graph"
 
