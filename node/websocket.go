@@ -36,8 +36,9 @@ type websocketGetNodeRequest struct {
 }
 
 type websocketResponse struct {
-	Data  any    `json:"data,omitempty"`
-	Error string `json:"error,omitempty"`
+	Action string `json:"action"`
+	Data   any    `json:"data,omitempty"`
+	Error  string `json:"error,omitempty"`
 }
 
 func sendActionFailed(ws *websocket.Conn, action string, err error) error {
@@ -64,7 +65,8 @@ func forwardRequest(ws *websocket.Conn, action string, data, req any, cb func() 
 	}
 
 	return websocket.JSON.Send(ws, websocketResponse{
-		Data: resData,
+		Action: action,
+		Data:   resData,
 	})
 }
 
