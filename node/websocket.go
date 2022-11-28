@@ -160,7 +160,10 @@ func (n *Node) startWebsocket(options map[string]glightning.Option) {
 
 	n.Logln(glightning.Info, "enabling WebSocket on: "+endpoint)
 
-	http.Handle("/", websocket.Handler(n.handleWebsocket))
+	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		s := websocket.Server{Handler: websocket.Handler(n.handleWebsocket)}
+		s.ServeHTTP(writer, request)
+	})
 	go func() {
 		err := http.ListenAndServe(endpoint, nil)
 		if err != nil {
