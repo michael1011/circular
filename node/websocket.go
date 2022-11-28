@@ -187,10 +187,6 @@ func (n *Node) websocketBroadcast(action string, msg any) {
 	}
 }
 
-func (n *Node) sendRebalanceEnd(result *types.Result) {
-	n.websocketBroadcast(actionRebalanceEnd, result)
-}
-
 func (n *Node) SendRebalanceAttempt(route *graph.PrettyRoute) {
 	n.websocketBroadcast(actionRebalanceUpdate, route)
 }
