@@ -2,14 +2,22 @@ package rebalance
 
 import (
 	"circular/node"
-	"circular/types"
 	"circular/util"
 	"github.com/elementsproject/glightning/jrpc2"
 )
 
 type ByScidCommand struct {
-	types.RebalanceByScid
-	Node *node.Node `json:"-"`
+	OutScid  string     `json:"outscid"`
+	InScid   string     `json:"inscid"`
+	Amount   uint64     `json:"amount,omitempty"`
+	MaxPPM   uint64     `json:"maxppm,omitempty"`
+	Attempts int        `json:"attempts,omitempty"`
+	MaxHops  int        `json:"maxhops,omitempty"`
+	Node     *node.Node `json:"-"`
+}
+
+func (r *ByScidCommand) Name() string {
+	return "circular"
 }
 
 func (r *ByScidCommand) New() interface{} {

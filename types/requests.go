@@ -9,6 +9,6 @@ type RebalanceByScid struct {
 	MaxHops  int    `json:"maxhops,omitempty"`
 }
 
-func (r *RebalanceByScid) Name() string {
+func (r RebalanceByScid) Name() string {
 	return "circular"
 }

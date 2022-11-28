@@ -150,15 +150,13 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 			err = forwardRequest(ws, actionRebalanceByScid, data.Data, &rebalanceScid, func() (any, error) {
 				go func() {
 					var res types.Result
-					err := n.lightning.Request(&rebalanceScid, &res)
+					err := n.lightning.Request(rebalanceScid, &res)
 					if err != nil {
-						n.websocketBroadcast(actionRebalanceFailed, websocketResponse{
-							Error: err.Error(),
-						})
+						n.websocketBroadcast(actionRebalanceFailed, nil, err.Error())
 						return
 					}
 
-					n.websocketBroadcast(actionRebalanceEnd, res)
+					n.websocketBroadcast(actionRebalanceEnd, res, nil)
 				}()
 
 				return nil, nil
@@ -206,13 +204,17 @@ func (n *Node) startWebsocket(options map[string]glightning.Option) {
 	}()
 }
 
-func (n *Node) websocketBroadcast(action string, msg any) {
+func (n *Node) websocketBroadcast(action string, msg any, err any) {
 	n.activeWebSocketsLock.Lock()
 	defer n.activeWebSocketsLock.Unlock()
 
-	data := websocketMessage{
+	data := websocketResponse{
 		Action: action,
 		Data:   msg,
+	}
+
+	if err != nil {
+		data.Error = err.(string)
 	}
 
 	for _, ws := range n.activeWebSockets {
@@ -225,5 +227,5 @@ func (n *Node) websocketBroadcast(action string, msg any) {
 }
 
 func (n *Node) SendRebalanceAttempt(route *graph.PrettyRoute) {
-	n.websocketBroadcast(actionRebalanceUpdate, route)
+	n.websocketBroadcast(actionRebalanceUpdate, route, nil)
 }
