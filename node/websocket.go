@@ -2,7 +2,6 @@ package node
 
 import (
 	"circular/graph"
-	"circular/rebalance"
 	"circular/types"
 	"fmt"
 	"github.com/elementsproject/glightning/glightning"
@@ -24,6 +23,7 @@ const (
 	// Responses
 	actionRebalanceUpdate = "rebalanceupdate"
 	actionRebalanceEnd    = "rebalanceend"
+	actionRebalanceFailed = "rebalancefailed"
 )
 
 type websocketMessage struct {
@@ -117,12 +117,21 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 			break
 
 		case actionRebalanceByScid:
-			var rebalanceScid rebalance.RebalanceByScid
+			var rebalanceScid types.RebalanceByScid
 			err = forwardRequest(ws, actionRebalanceByScid, data.Data, &rebalanceScid, func() (any, error) {
 				go func() {
-					res, _ := rebalanceScid.Call()
+					var res types.Result
+					err := n.lightning.Request(&rebalanceScid, &res)
+					if err != nil {
+						n.websocketBroadcast(actionRebalanceFailed, websocketResponse{
+							Error: err.Error(),
+						})
+						return
+					}
+
 					n.websocketBroadcast(actionRebalanceEnd, res)
 				}()
+
 				return nil, nil
 			})
 			break

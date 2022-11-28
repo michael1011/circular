@@ -13,7 +13,7 @@ func registerMethods(p *glightning.Plugin) {
 	rpcRebalanceByNode.Category = "utility"
 	p.RegisterMethod(rpcRebalanceByNode)
 
-	rpcRebalanceByScid := glightning.NewRpcMethod(&rebalance.RebalanceByScid{}, "Rebalance by Scid")
+	rpcRebalanceByScid := glightning.NewRpcMethod(&rebalance.ByScidCommand{}, "Rebalance by Scid")
 	rpcRebalanceByScid.LongDesc = "Rebalance the channel `inchannel` from the channel `outchannel` for amount `amount` for at most `maxppm`"
 	rpcRebalanceByScid.Category = "utility"
 	p.RegisterMethod(rpcRebalanceByScid)
