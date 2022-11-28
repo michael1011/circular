@@ -19,7 +19,7 @@ services:
       - 9735
     volumes:
       - ./data/clightning-1:/root/.lightning/
-      - ./data/circular:/root/.lightning/plugins/circular
+      - ./circular:/root/.lightning/plugins/circular
 
   clightning-2:
     hostname: clightning-2
@@ -31,7 +31,7 @@ services:
       - 9735
     volumes:
       - ./data/clightning-2:/root/.lightning/
-      - ./data/circular:/root/.lightning/plugins/circular
+      - ./circular:/root/.lightning/plugins/circular
 
   clightning-3:
     hostname: clightning-3
@@ -43,4 +43,4 @@ services:
       - 9735
     volumes:
       - ./data/clightning-3:/root/.lightning/
-      - ./data/circular:/root/.lightning/plugins/circular
+      - ./circular:/root/.lightning/plugins/circular

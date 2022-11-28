@@ -2,6 +2,7 @@
 export COMPOSE_PROJECT_NAME=balanzierer
 
 balanzierer-build(){
+    sudo rm -rf $(pwd)/circular
     docker build -t balanzierer ..
     docker run --volume $(pwd)/circular:/go/circular balanzierer
     sudo chmod -R 777 $(pwd)/circular
@@ -86,8 +87,8 @@ lightning-init(){
   echo "mining 10 blocks..."
   bitcoin-cli-sim -generate 10 > /dev/null
 
-  echo "wait for 30s..."
-  sleep 30 # else blockheight tests fail for cln
+  echo "wait for 25s..."
+  sleep 25 # else blockheight tests fail for cln
 
   lightning-sync
 
@@ -99,32 +100,25 @@ lightning-init(){
   peerid=$(connect_clightning_node 1 2)
   echo "open channel from cln-1 to cln-2"
   lightning-cli-sim 1 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
-  bitcoin-cli-sim -generate 10 > /dev/null
-  wait-for-clightning-channel 1
-  wait-for-clightning-channel 2
-  lightning-sync
 
   # cln-2 -> cln-3
   peerid=$(connect_clightning_node 2 3)
   echo "open channel from cln-2 to cln-3"
   lightning-cli-sim 2 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
-  bitcoin-cli-sim -generate 10 > /dev/null
-  wait-for-clightning-channel 2
-  wait-for-clightning-channel 3
-  lightning-sync
 
   # cln-3 -> cln-1
   peerid=$(connect_clightning_node 3 1)
   echo "open channel from cln-3 to cln-1"
   lightning-cli-sim 3 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
+
   bitcoin-cli-sim -generate 10 > /dev/null
   wait-for-clightning-channel 1
+  wait-for-clightning-channel 2
   wait-for-clightning-channel 3
   lightning-sync
 
-
-  echo "wait for 20s... warmup..."
-  sleep 20
+  echo "wait for 15s... warmup..."
+  sleep 15
 
 }
 
