@@ -15,12 +15,14 @@ import (
 
 const (
 	// Requests
+	actionPing            = "ping"
 	actionGetInfo         = "getinfo"
 	actionListPeers       = "listpeers"
 	actionGetNode         = "getnode"
 	actionRebalanceByScid = "rebalancebyscid"
 
 	// Responses
+	actionPong            = "pong"
 	actionRebalanceUpdate = "rebalanceupdate"
 	actionRebalanceEnd    = "rebalanceend"
 	actionRebalanceFailed = "rebalancefailed"
@@ -137,6 +139,11 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 				return nil, nil
 			})
 			break
+
+		case actionPing:
+			err = websocket.JSON.Send(ws, websocketResponse{
+				Action: actionPong,
+			})
 
 		default:
 			err = websocket.JSON.Send(ws, websocketResponse{
