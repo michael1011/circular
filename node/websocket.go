@@ -43,6 +43,12 @@ type websocketResponse struct {
 	Error  string `json:"error,omitempty"`
 }
 
+type channelInfo struct {
+	*glightning.Peer
+	Alias string `json:"alias"`
+	Color string `json:"color"`
+}
+
 func sendActionFailed(ws *websocket.Conn, action string, err error) error {
 	return websocket.JSON.Send(ws, websocketResponse{
 		Error: fmt.Sprintf("could not %s: %s", action, err),
@@ -109,7 +115,26 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 
 		case actionListPeers:
 			err = forwardRequest(ws, actionListPeers, data.Data, nil, func() (any, error) {
-				return n.lightning.ListPeers()
+				peers, err := n.lightning.ListPeers()
+				if err != nil {
+					return nil, err
+				}
+
+				channels := make([]*channelInfo, len(peers))
+				for i, peer := range peers {
+					node, err := n.lightning.GetNode(peer.Id)
+					if err != nil {
+						return nil, err
+					}
+
+					channels[i] = &channelInfo{
+						Peer:  peer,
+						Alias: node.Alias,
+						Color: node.Color,
+					}
+				}
+
+				return channels, nil
 			})
 			break
 
