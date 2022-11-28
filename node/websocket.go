@@ -20,6 +20,8 @@ const (
 	actionListPeers       = "listpeers"
 	actionGetNode         = "getnode"
 	actionRebalanceByScid = "rebalancebyscid"
+	actionRebalanceStop   = "stop"
+	actionRebalanceResume = "resume"
 
 	// Responses
 	actionPong            = "pong"
@@ -160,6 +162,28 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 				}()
 
 				return nil, nil
+			})
+			break
+
+		case actionRebalanceResume:
+			var res types.Resume
+			err = forwardRequest(ws, actionRebalanceResume, data.Data, &res, func() (any, error) {
+				err := n.lightning.Request(types.Resume{}, &res)
+				if err != nil {
+					return nil, err
+				}
+				return res, nil
+			})
+			break
+
+		case actionRebalanceStop:
+			var res types.Stop
+			err = forwardRequest(ws, actionRebalanceStop, data.Data, &res, func() (any, error) {
+				err := n.lightning.Request(types.Stop{}, &res)
+				if err != nil {
+					return nil, err
+				}
+				return res, nil
 			})
 			break
 

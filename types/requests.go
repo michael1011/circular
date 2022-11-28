@@ -12,3 +12,19 @@ type RebalanceByScid struct {
 func (r RebalanceByScid) Name() string {
 	return "circular"
 }
+
+type Stop struct {
+	Message string `json:"message"`
+}
+
+func (s Stop) Name() string {
+	return "circular-stop"
+}
+
+type Resume struct {
+	Message string `json:"message"`
+}
+
+func (s Resume) Name() string {
+	return "circular-resume"
+}
