@@ -1,11 +1,31 @@
 #!/bin/sh
 export COMPOSE_PROJECT_NAME=balanzierer
 
-balanzierer-build(){
-    sudo rm -rf $(pwd)/circular
+balanzierer-build() {
+    sudo rm -rf $(pwd)/circular-build
     docker build -t balanzierer ..
-    docker run --rm --volume $(pwd)/circular:/go/circular balanzierer
+    docker run --rm --volume $(pwd)/circular-build:/go/circular balanzierer
+    plugin-stop
+    cp $(pwd)/circular-build/circular $(pwd)/circular/
     sudo chmod -R 777 $(pwd)/circular
+    plugin-start
+}
+
+balanzierer-build-local() {
+    cd ..
+    make
+    cd docker
+    plugin-stop
+    cp ../circular circular/
+    plugin-start
+}
+
+plugin-start() {
+    lightning-cli-sim 1 plugin start /circular/circular > /dev/null
+}
+
+plugin-stop() {
+    lightning-cli-sim 1 plugin stop /circular/circular > /dev/null
 }
 
 bitcoin-cli-sim() {
