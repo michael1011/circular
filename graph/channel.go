@@ -11,8 +11,8 @@ type Channel struct {
 	*glightning.Channel `json:"channel"`
 	Liquidity           uint64 `json:"liquidity"`
 	Timestamp           int64  `json:"timestamp"`
-	maxHtlcMsat         uint64 `json:"-"`
-	minHtlcMsat         uint64 `json:"-"`
+	maxHtlcMsat         uint64
+	minHtlcMsat         uint64
 }
 
 func NewChannel(channel *glightning.Channel, liquidity uint64, timestamp int64) *Channel {

@@ -2,7 +2,7 @@ package parallel
 
 import (
 	"circular/graph"
-	"circular/node"
+	"circular/singleton"
 	"circular/types"
 	"github.com/elementsproject/glightning/glightning"
 	"github.com/gammazero/deque"
@@ -20,7 +20,7 @@ type RebalanceMethods interface {
 
 type AbstractRebalance struct {
 	TotalAttempts       uint64
-	Node                *node.Node
+	Node                singleton.Node
 	TargetChannel       *graph.Channel
 	Candidates          *deque.Deque[*graph.Channel]
 	AmountRebalanced    uint64
@@ -40,7 +40,7 @@ type AbstractRebalance struct {
 }
 
 func (r *AbstractRebalance) Init(amount, maxppm, splitamount uint64, splits, attempts, maxhops int) {
-	r.Node = node.GetNode()
+	r.Node = singleton.GetNode()
 	r.AmountLock = &sync.Mutex{}
 	r.QueueLock = &sync.Mutex{}
 	r.TotalAttempts = 0

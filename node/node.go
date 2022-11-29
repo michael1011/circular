@@ -2,6 +2,7 @@ package node
 
 import (
 	"circular/graph"
+	"circular/singleton"
 	"circular/util"
 	"fmt"
 	"github.com/elementsproject/glightning/glightning"
@@ -23,11 +24,6 @@ const (
 	DefaultWebSocketEndpoint = "0.0.0.0:8222"
 )
 
-var (
-	singleton *Node
-	once      sync.Once
-)
-
 type Node struct {
 	lightning           *glightning.Lightning
 	plugin              *glightning.Plugin
@@ -40,28 +36,23 @@ type Node struct {
 	Graph               *graph.Graph
 	DB                  *Store
 	LiquidityUpdateChan chan *LiquidityUpdate
-	Stopped             bool
+
+	stopped bool
 
 	activeWebSockets     []*websocket.Conn
 	activeWebSocketsLock sync.Mutex
 }
 
-func GetNode() *Node {
-	once.Do(func() {
-		rand.Seed(time.Now().UnixNano())
-		singleton = &Node{
-			initLock:            &sync.Mutex{},
-			PeersLock:           &sync.RWMutex{},
-			Peers:               make(map[string]*glightning.Peer),
-			LiquidityUpdateChan: make(chan *LiquidityUpdate, 16),
-		}
-		go singleton.UpdateLiquidity()
-	})
-	// This makes sure the node is not used until it is initialized or refreshed
-	singleton.initLock.Lock()
-	// unlock it right away.
-	singleton.initLock.Unlock()
-	return singleton
+func NewNode() *Node {
+	rand.Seed(time.Now().UnixNano())
+	node := &Node{
+		initLock:            &sync.Mutex{},
+		PeersLock:           &sync.RWMutex{},
+		Peers:               make(map[string]*glightning.Peer),
+		LiquidityUpdateChan: make(chan *LiquidityUpdate, 16),
+	}
+	singleton.SetNode(node)
+	return node
 }
 
 func (n *Node) Init(lightning *glightning.Lightning, plugin *glightning.Plugin, options map[string]glightning.Option, config *glightning.Config) {
@@ -145,4 +136,32 @@ func (n *Node) RefreshChannel(channel *graph.Channel) {
 		return
 	}
 	n.Graph.RefreshChannels(channels)
+}
+
+func (n *Node) Stopped() bool {
+	return n.stopped
+}
+
+func (n *Node) SetStopped(stopped bool) {
+	n.stopped = stopped
+}
+
+func (n *Node) GetPeersLock() *sync.RWMutex {
+	return n.PeersLock
+}
+
+func (n *Node) GetGraph() *graph.Graph {
+	return n.Graph
+}
+
+func (n *Node) GetId() string {
+	return n.Id
+}
+
+func (n *Node) GetPeers() map[string]*glightning.Peer {
+	return n.Peers
+}
+
+func (n *Node) GetFromDb(key string) ([]byte, error) {
+	return n.DB.Get(key)
 }

@@ -139,7 +139,7 @@ func (r *RebalancePull) validateParameters() error {
 }
 
 func (r *RebalancePull) GetCandidateDirection(id string) string {
-	return util.GetDirection(r.Node.Id, id)
+	return util.GetDirection(r.Node.GetId(), id)
 }
 
 // EnqueueCandidate puts a candidate at the front of the queue
@@ -157,10 +157,10 @@ func (r *RebalancePull) EnqueueCandidate(result *types.Result) {
 }
 
 func (r *RebalancePull) AddSuccess(result *types.Result) {
-	r.Node.Graph.LockAliases()
-	defer r.Node.Graph.UnlockAliases()
+	r.Node.GetGraph().LockAliases()
+	defer r.Node.GetGraph().UnlockAliases()
 	alias := "unknown"
-	if a, ok := r.Node.Graph.Aliases[result.Out]; ok {
+	if a, ok := r.Node.GetGraph().Aliases[result.Out]; ok {
 		alias = a
 	}
 	r.AddSuccessGeneric(alias, result.PPM, result.Amount)

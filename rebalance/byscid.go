@@ -1,19 +1,18 @@
 package rebalance
 
 import (
-	"circular/node"
+	"circular/singleton"
 	"circular/util"
 	"github.com/elementsproject/glightning/jrpc2"
 )
 
 type ByScidCommand struct {
-	OutScid  string     `json:"outscid"`
-	InScid   string     `json:"inscid"`
-	Amount   uint64     `json:"amount,omitempty"`
-	MaxPPM   uint64     `json:"maxppm,omitempty"`
-	Attempts int        `json:"attempts,omitempty"`
-	MaxHops  int        `json:"maxhops,omitempty"`
-	Node     *node.Node `json:"-"`
+	OutScid  string `json:"outscid"`
+	InScid   string `json:"inscid"`
+	Amount   uint64 `json:"amount,omitempty"`
+	MaxPPM   uint64 `json:"maxppm,omitempty"`
+	Attempts int    `json:"attempts,omitempty"`
+	MaxHops  int    `json:"maxhops,omitempty"`
 }
 
 func (r *ByScidCommand) Name() string {
@@ -25,17 +24,17 @@ func (r *ByScidCommand) New() interface{} {
 }
 
 func (r *ByScidCommand) Call() (jrpc2.Result, error) {
-	r.Node = node.GetNode()
+	node := singleton.GetNode()
 	if r.InScid == "" || r.OutScid == "" {
 		return nil, util.ErrNoRequiredParameter
 	}
 
-	outgoingChannel, err := r.Node.GetOutgoingChannelFromScid(r.OutScid)
+	outgoingChannel, err := node.GetOutgoingChannelFromScid(r.OutScid)
 	if err != nil {
 		return nil, err
 	}
 
-	incomingChannel, err := r.Node.GetIncomingChannelFromScid(r.InScid)
+	incomingChannel, err := node.GetIncomingChannelFromScid(r.InScid)
 	if err != nil {
 		return nil, err
 	}

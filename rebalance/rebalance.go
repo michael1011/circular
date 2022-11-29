@@ -1,8 +1,9 @@
 package rebalance
 
 import (
+	"circular/consts"
 	"circular/graph"
-	"circular/node"
+	"circular/singleton"
 	"circular/types"
 	"circular/util"
 	"errors"
@@ -18,7 +19,7 @@ type Rebalance struct {
 	MaxPPM     uint64
 	Attempts   int
 	MaxHops    int
-	Node       *node.Node
+	Node       singleton.Node
 }
 
 func NewRebalance(outChannel, inChannel *graph.Channel, amount, maxppm uint64, attempts, maxHops int) *Rebalance {
@@ -29,7 +30,7 @@ func NewRebalance(outChannel, inChannel *graph.Channel, amount, maxppm uint64, a
 		MaxPPM:     maxppm,
 		Attempts:   attempts,
 		MaxHops:    maxHops,
-		Node:       node.GetNode(),
+		Node:       singleton.GetNode(),
 	}
 }
 
@@ -85,7 +86,7 @@ func (r *Rebalance) Run() *types.Result {
 		// sendpay timeout
 		if err == util.ErrSendPayTimeout {
 			lastError = "rebalancing timed out after " +
-				strconv.Itoa(node.SENDPAY_TIMEOUT) +
+				strconv.Itoa(consts.SendpayTimeout) +
 				"s."
 			break
 		}
@@ -112,7 +113,7 @@ func (r *Rebalance) Run() *types.Result {
 }
 
 func (r *Rebalance) runAttempt(maxHops int) (*types.Result, error) {
-	if r.Node.Stopped {
+	if r.Node.Stopped() {
 		return nil, util.ErrCircularStopped
 	}
 
@@ -132,7 +133,7 @@ func (r *Rebalance) runAttempt(maxHops int) (*types.Result, error) {
 	result.PPM = route.FeePPM
 	result.Route = route
 	result.Message = fmt.Sprintf("successfully rebalanced %d sats from %s to %s at %d ppm. Total fees paid: %.3f sats",
-		result.Amount, r.Node.Graph.GetAlias(r.OutChannel.Destination), r.Node.Graph.GetAlias(r.InChannel.Source),
+		result.Amount, r.Node.GetGraph().GetAlias(r.OutChannel.Destination), r.Node.GetGraph().GetAlias(r.InChannel.Source),
 		result.PPM, float64(result.Fee)/1000)
 
 	return result, nil

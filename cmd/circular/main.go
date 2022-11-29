@@ -35,7 +35,7 @@ func onInit(plugin *glightning.Plugin, options map[string]glightning.Option, con
 		log.Fatalln("error starting plugin: ", err)
 	}
 
-	node.GetNode().Init(lightning, plugin, options, config)
+	node.NewNode().Init(lightning, plugin, options, config)
 	log.Printf("circular successfully init'd!\n")
 }
 

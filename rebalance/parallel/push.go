@@ -148,7 +148,7 @@ func (r *RebalancePush) setDefaults() {
 }
 
 func (r *RebalancePush) GetCandidateDirection(id string) string {
-	return util.GetDirection(id, r.Node.Id)
+	return util.GetDirection(id, r.Node.GetId())
 }
 
 // EnqueueCandidate puts a candidate at the front of the queue
@@ -166,10 +166,10 @@ func (r *RebalancePush) EnqueueCandidate(result *types.Result) {
 }
 
 func (r *RebalancePush) AddSuccess(result *types.Result) {
-	r.Node.Graph.LockAliases()
-	defer r.Node.Graph.UnlockAliases()
+	r.Node.GetGraph().LockAliases()
+	defer r.Node.GetGraph().UnlockAliases()
 	alias := "unknown"
-	if a, ok := r.Node.Graph.Aliases[result.In]; ok {
+	if a, ok := r.Node.GetGraph().Aliases[result.In]; ok {
 		alias = a
 	}
 	r.AddSuccessGeneric(alias, result.PPM, result.Amount)

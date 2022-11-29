@@ -2,6 +2,7 @@ package node
 
 import (
 	"circular/graph"
+	"circular/singleton"
 	"circular/util"
 	"github.com/elementsproject/glightning/glightning"
 	"github.com/elementsproject/glightning/jrpc2"
@@ -25,7 +26,7 @@ func (s *Stats) New() interface{} {
 }
 
 func (s *Stats) Call() (jrpc2.Result, error) {
-	return GetNode().GetStats(), nil
+	return singleton.GetNode().(*Node).GetStats(), nil
 }
 
 func (n *Node) GetStats() *Stats {

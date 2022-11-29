@@ -1,20 +1,13 @@
 package node
 
 import (
+	"circular/consts"
 	"circular/graph"
 	"circular/util"
 	"errors"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/elementsproject/glightning/glightning"
 	"time"
-)
-
-const (
-	FAILURE_PREFIX  = "f_"
-	SUCCESS_PREFIX  = "s_"
-	ROUTE_PREFIX    = "r_"
-	TIMEOUT_PREFIX  = "timeout_"
-	SENDPAY_TIMEOUT = 120 // 2 minutes
 )
 
 func (n *Node) SendPay(route *graph.Route, paymentHash string) (*glightning.SendPayFields, error) {
@@ -28,7 +21,7 @@ func (n *Node) SendPay(route *graph.Route, paymentHash string) (*glightning.Send
 	}
 
 	n.Logln(glightning.Debug, "waiting for payment to be confirmed")
-	result, err := n.lightning.WaitSendPay(paymentHash, SENDPAY_TIMEOUT)
+	result, err := n.lightning.WaitSendPay(paymentHash, consts.SendpayTimeout)
 
 	if err != nil {
 		n.Logf(glightning.Debug, "%+v", err)
@@ -69,7 +62,7 @@ func (n *Node) manageTimeout(paymentHash string) (*glightning.SendPayFields, err
 
 	// save the failure in the DB. This will be used to update the liquidity
 	n.Logln(glightning.Debug, "saving payment timeout to database")
-	if err := n.DB.Set(TIMEOUT_PREFIX+paymentHash, []byte("timeout")); err != nil {
+	if err := n.DB.Set(consts.TimeoutPrefix+paymentHash, []byte("timeout")); err != nil {
 		n.Logln(glightning.Unusual, err)
 	}
 
@@ -83,7 +76,7 @@ func (n *Node) deleteIfOurs(paymentHash string) error {
 	// check if this payment was made by us
 	if err == badger.ErrKeyNotFound {
 		// check if the payment timed out
-		key = TIMEOUT_PREFIX + paymentHash
+		key = consts.TimeoutPrefix + paymentHash
 		_, err = n.DB.Get(key)
 		if err == badger.ErrKeyNotFound {
 			return err // this payment was not made by us
@@ -105,7 +98,7 @@ func (n *Node) OnPaymentFailure(sf *glightning.SendPayFailure) {
 	}
 
 	// save to db
-	if err := n.SaveToDb(FAILURE_PREFIX+sf.Data.PaymentHash, sf); err != nil {
+	if err := n.SaveToDb(consts.FailurePrefix+sf.Data.PaymentHash, sf); err != nil {
 		n.Logln(glightning.Unusual, err)
 	}
 
@@ -125,7 +118,7 @@ func (n *Node) OnPaymentSuccess(ss *glightning.SendPaySuccess) {
 	}
 
 	// save to db
-	if err := n.SaveToDb(SUCCESS_PREFIX+ss.PaymentHash, ss); err != nil {
+	if err := n.SaveToDb(consts.SuccessPrefix+ss.PaymentHash, ss); err != nil {
 		n.Logln(glightning.Unusual, err)
 	}
 }

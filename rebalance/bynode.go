@@ -2,20 +2,20 @@ package rebalance
 
 import (
 	"circular/graph"
-	"circular/node"
+	"circular/singleton"
 	"circular/util"
 	"github.com/elementsproject/glightning/glightning"
 	"github.com/elementsproject/glightning/jrpc2"
 )
 
 type RebalanceByNode struct {
-	OutNode  string     `json:"outnode"`
-	InNode   string     `json:"innode"`
-	Amount   uint64     `json:"amount,omitempty"`
-	MaxPPM   uint64     `json:"maxppm,omitempty"`
-	Attempts int        `json:"attempts,omitempty"`
-	MaxHops  int        `json:"maxhops,omitempty"`
-	Node     *node.Node `json:"-"`
+	OutNode  string         `json:"outnode"`
+	InNode   string         `json:"innode"`
+	Amount   uint64         `json:"amount,omitempty"`
+	MaxPPM   uint64         `json:"maxppm,omitempty"`
+	Attempts int            `json:"attempts,omitempty"`
+	MaxHops  int            `json:"maxhops,omitempty"`
+	Node     singleton.Node `json:"-"`
 }
 
 func (r *RebalanceByNode) Name() string {
@@ -41,7 +41,7 @@ func (r *RebalanceByNode) getBestIncomingChannel() (*graph.Channel, error) {
 }
 
 func (r *RebalanceByNode) Call() (jrpc2.Result, error) {
-	r.Node = node.GetNode()
+	r.Node = singleton.GetNode()
 	if r.InNode == "" || r.OutNode == "" {
 		return nil, util.ErrNoRequiredParameter
 	}
@@ -72,11 +72,11 @@ func (r *RebalanceByNode) Call() (jrpc2.Result, error) {
 }
 
 func (r *RebalanceByNode) validatePeers() error {
-	if len(r.Node.Peers) == 0 {
+	if len(r.Node.GetPeers()) == 0 {
 		return util.ErrNoPeers
 	}
 	//validate that the nodes are not self
-	if r.InNode == r.Node.Id || r.OutNode == r.Node.Id {
+	if r.InNode == r.Node.GetId() || r.OutNode == r.Node.GetId() {
 		return util.ErrSelfNode
 	}
 	//validate that the nodes are not the same
@@ -85,10 +85,10 @@ func (r *RebalanceByNode) validatePeers() error {
 	}
 
 	//validate that the nodes are actually peers
-	if _, ok := r.Node.Peers[r.InNode]; !ok {
+	if _, ok := r.Node.GetPeers()[r.InNode]; !ok {
 		return util.ErrNoPeer
 	}
-	if _, ok := r.Node.Peers[r.OutNode]; !ok {
+	if _, ok := r.Node.GetPeers()[r.OutNode]; !ok {
 		return util.ErrNoPeer
 	}
 	return nil

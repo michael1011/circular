@@ -2,6 +2,7 @@ package node
 
 import (
 	"circular/graph"
+	"circular/rebalance"
 	"circular/types"
 	"fmt"
 	"github.com/elementsproject/glightning/glightning"
@@ -152,11 +153,12 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 			break
 
 		case actionRebalanceByScid:
-			var rebalanceScid types.RebalanceByScid
+			var rebalanceScid rebalance.ByScidCommand
 			err = forwardRequest(ws, actionRebalanceByScid, data.Data, &rebalanceScid, func() (any, error) {
 				go func() {
 					var res types.Result
-					err := n.lightning.Request(rebalanceScid, &res)
+					n.Logln(glightning.Info, "wtf", rebalanceScid)
+					err := n.lightning.Request(&rebalanceScid, &res)
 					if err != nil {
 						n.websocketBroadcast(actionRebalanceFailed, nil, err.Error())
 						return
@@ -170,9 +172,9 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 			break
 
 		case actionRebalanceResume:
-			var res types.Resume
+			var res Resume
 			err = forwardRequest(ws, actionRebalanceResume, data.Data, &res, func() (any, error) {
-				err := n.lightning.Request(types.Resume{}, &res)
+				err := n.lightning.Request(&Resume{}, &res)
 				if err != nil {
 					return nil, err
 				}
@@ -181,9 +183,9 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 			break
 
 		case actionRebalanceStop:
-			var res types.Stop
+			var res Stop
 			err = forwardRequest(ws, actionRebalanceStop, data.Data, &res, func() (any, error) {
-				err := n.lightning.Request(types.Stop{}, &res)
+				err := n.lightning.Request(&Stop{}, &res)
 				if err != nil {
 					return nil, err
 				}

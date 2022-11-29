@@ -1,8 +1,8 @@
 package rebalance
 
 import (
+	"circular/consts"
 	"circular/graph"
-	"circular/node"
 	"circular/util"
 	"github.com/elementsproject/glightning/glightning"
 	"time"
@@ -11,13 +11,13 @@ import (
 func (r *Rebalance) getRoute(maxHops int) (*graph.Route, error) {
 	defer util.TimeTrack(time.Now(), "rebalance.getRoute", r.Node.Logf)
 	exclude := make(map[string]bool)
-	exclude[r.Node.Id] = true
+	exclude[r.Node.GetId()] = true
 
 	src := r.OutChannel.Destination
 	dst := r.InChannel.Source
 
-	r.Node.Logln(glightning.Debug, "looking for a route from ", r.Node.Graph.GetAlias(src), " to ", r.Node.Graph.GetAlias(dst))
-	route, err := r.Node.Graph.GetRoute(src, dst, r.Amount, exclude, maxHops)
+	r.Node.Logln(glightning.Debug, "looking for a route from ", r.Node.GetGraph().GetAlias(src), " to ", r.Node.GetGraph().GetAlias(dst))
+	route, err := r.Node.GetGraph().GetRoute(src, dst, r.Amount, exclude, maxHops)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (r *Rebalance) tryRoute(maxHops int) (*graph.PrettyRoute, error) {
 	prettyRoute := graph.NewPrettyRoute(route, paymentSecretHash)
 
 	// save route to DB
-	if err := r.Node.SaveToDb(node.ROUTE_PREFIX+paymentSecretHash, prettyRoute); err != nil {
+	if err := r.Node.SaveToDb(consts.RoutePrefix+paymentSecretHash, prettyRoute); err != nil {
 		r.Node.Logln(glightning.Unusual, "unable to save route to db: ", err)
 	}
 	r.Node.Logln(glightning.Debug, prettyRoute)

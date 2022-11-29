@@ -1,6 +1,7 @@
 package node
 
 import (
+	"circular/singleton"
 	"github.com/elementsproject/glightning/jrpc2"
 )
 
@@ -17,7 +18,7 @@ func (s *Stop) New() interface{} {
 }
 
 func (s *Stop) Call() (jrpc2.Result, error) {
-	GetNode().Stopped = true
+	singleton.GetNode().SetStopped(true)
 	return &Stop{Message: "circular has been stopped. New commands will not fire htlcs until resumed"}, nil
 }
 
@@ -34,6 +35,6 @@ func (s *Resume) New() interface{} {
 }
 
 func (s *Resume) Call() (jrpc2.Result, error) {
-	GetNode().Stopped = false
+	singleton.GetNode().SetStopped(false)
 	return &Stop{Message: "circular has been resumed"}, nil
 }

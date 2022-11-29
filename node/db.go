@@ -1,9 +1,10 @@
 package node
 
 import (
+	"circular/consts"
 	"circular/graph"
 	"encoding/json"
-	badger "github.com/dgraph-io/badger/v3"
+	"github.com/dgraph-io/badger/v3"
 	"github.com/elementsproject/glightning/glightning"
 	"log"
 	"time"
@@ -75,7 +76,7 @@ func (s *Store) ListFailures() ([]glightning.SendPayFailure, error) {
 	err := s.db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
-		prefix := []byte(FAILURE_PREFIX)
+		prefix := []byte(consts.FailurePrefix)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			v, err := item.ValueCopy(nil)
@@ -102,7 +103,7 @@ func (s *Store) ListSuccesses() ([]glightning.SendPaySuccess, error) {
 	err := s.db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
-		prefix := []byte(SUCCESS_PREFIX)
+		prefix := []byte(consts.SuccessPrefix)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			v, err := item.ValueCopy(nil)
@@ -129,7 +130,7 @@ func (s *Store) ListRoutes() ([]graph.PrettyRoute, error) {
 	err := s.db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
-		prefix := []byte(ROUTE_PREFIX)
+		prefix := []byte(consts.RoutePrefix)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			v, err := item.ValueCopy(nil)

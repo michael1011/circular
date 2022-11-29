@@ -1,7 +1,7 @@
 package main
 
 import (
-	"circular/node"
+	"circular/singleton"
 	"github.com/elementsproject/glightning/glightning"
 )
 
@@ -17,17 +17,17 @@ func registerSubscriptions(p *glightning.Plugin) {
 }
 
 func OnSendPayFailure(sf *glightning.SendPayFailure) {
-	node.GetNode().OnPaymentFailure(sf)
+	singleton.GetNode().OnPaymentFailure(sf)
 }
 
 func OnSendPaySuccess(ss *glightning.SendPaySuccess) {
-	node.GetNode().OnPaymentSuccess(ss)
+	singleton.GetNode().OnPaymentSuccess(ss)
 }
 
 func OnConnect(c *glightning.ConnectEvent) {
-	node.GetNode().OnConnect(c)
+	singleton.GetNode().OnConnect(c)
 }
 
 func OnDisconnect(d *glightning.DisconnectEvent) {
-	node.GetNode().OnDisconnect(d)
+	singleton.GetNode().OnDisconnect(d)
 }

@@ -8,8 +8,8 @@ import (
 )
 
 func (r *AbstractRebalance) FindCandidates(exclude string) error {
-	r.Node.PeersLock.RLock()
-	defer r.Node.PeersLock.RUnlock()
+	r.Node.GetPeersLock().RLock()
+	defer r.Node.GetPeersLock().RUnlock()
 
 	r.Node.Logln(glightning.Debug, "Looking for candidates")
 	peers := r.GetCandidatesList()
@@ -46,13 +46,13 @@ func (r *AbstractRebalance) FindCandidates(exclude string) error {
 func (r *AbstractRebalance) GetCandidatesList() []*glightning.Peer {
 	if r.CandidatesList == nil {
 		// if no CandidatesList was supplied, consider all peers as potential candidates
-		return util.GetMapValues(r.Node.Peers)
+		return util.GetMapValues(r.Node.GetPeers())
 	} else {
 		// if a CandidatesList was supplied, consider only the peers in the CandidatesList as potential candidates
 		result := make([]*glightning.Peer, 0)
 		for _, peer := range r.CandidatesList {
-			if _, ok := r.Node.Peers[peer]; ok {
-				result = append(result, r.Node.Peers[peer])
+			if _, ok := r.Node.GetPeers()[peer]; ok {
+				result = append(result, r.Node.GetPeers()[peer])
 			} else {
 				r.Node.Logln(glightning.Unusual, "peer in CandidatesList does not exist: ", peer)
 			}
