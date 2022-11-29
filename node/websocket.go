@@ -46,7 +46,7 @@ type websocketResponse struct {
 }
 
 type channelInfo struct {
-	*glightning.Peer
+	*types.Peer
 	Alias string `json:"alias"`
 	Color string `json:"color"`
 }
@@ -117,13 +117,17 @@ func (n *Node) handleWebsocket(ws *websocket.Conn) {
 
 		case actionListPeers:
 			err = forwardRequest(ws, actionListPeers, data.Data, nil, func() (any, error) {
-				peers, err := n.lightning.ListPeers()
+				var res struct {
+					Peers []*types.Peer `json:"peers"`
+				}
+
+				err := n.lightning.Request(glightning.ListPeersRequest{}, &res)
 				if err != nil {
 					return nil, err
 				}
 
-				channels := make([]*channelInfo, len(peers))
-				for i, peer := range peers {
+				channels := make([]*channelInfo, len(res.Peers))
+				for i, peer := range res.Peers {
 					node, err := n.lightning.GetNode(peer.Id)
 					if err != nil {
 						return nil, err
