@@ -20,4 +20,5 @@ circular
 
 docker/data
 docker/circular
+docker/circular-build
 *.log
