@@ -67,9 +67,9 @@ regtest-start-log(){
 regtest-stop(){
   docker compose down --volumes
   # clean up lightning node data
-  sudo rm -rf ./data/clightning-1 ./data/clightning-2 ./data/clightning-3
+  sudo rm -rf ./data/clightning-{1,2,3,4,5}
   # recreate lightning node data folders preventing permission errors
-  mkdir ./data/clightning-1 ./data/clightning-2 ./data/clightning-3
+  mkdir ./data/clightning-{1,2,3,4,5}
 }
 
 regtest-restart(){
@@ -93,6 +93,9 @@ regtest-init(){
 lightning-sync(){
   wait-for-clightning-sync 1
   wait-for-clightning-sync 2
+  wait-for-clightning-sync 3
+  wait-for-clightning-sync 4
+  wait-for-clightning-sync 5
 }
 
 lightning-init(){
@@ -102,6 +105,8 @@ lightning-init(){
     fund_clightning_node 1
     fund_clightning_node 2
     fund_clightning_node 3
+    fund_clightning_node 4
+    fund_clightning_node 5
   done
 
   echo "mining 10 blocks..."
@@ -112,13 +117,22 @@ lightning-init(){
 
   lightning-sync
 
-  channel_size=24000000 # 0.024 btc
-  balance_size=12000000 # 0.12 btc
-  balance_size_msat=12000000000 # 0.12 btc
+  channel_size=24000000 # 0.24 btc
+  balance_size_msat=5000000000 # 0.05 btc
 
   # cln-1 -> cln-2
   peerid=$(connect_clightning_node 1 2)
   echo "open channel from cln-1 to cln-2"
+  lightning-cli-sim 1 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
+
+  # cln-1 -> cln-4
+  peerid=$(connect_clightning_node 1 4)
+  echo "open channel from cln-1 to cln-4"
+  lightning-cli-sim 1 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
+
+  # cln-1 -> cln-5
+  peerid=$(connect_clightning_node 1 5)
+  echo "open channel from cln-1 to cln-5"
   lightning-cli-sim 1 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
 
   # cln-2 -> cln-3
@@ -126,15 +140,42 @@ lightning-init(){
   echo "open channel from cln-2 to cln-3"
   lightning-cli-sim 2 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
 
+  # cln-2 -> cln-4
+  peerid=$(connect_clightning_node 2 4)
+  echo "open channel from cln-2 to cln-4"
+  lightning-cli-sim 2 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
+
+  # cln-2 -> cln-5
+  peerid=$(connect_clightning_node 2 5)
+  echo "open channel from cln-2 to cln-5"
+  lightning-cli-sim 2 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
+
   # cln-3 -> cln-1
   peerid=$(connect_clightning_node 3 1)
   echo "open channel from cln-3 to cln-1"
   lightning-cli-sim 3 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
 
+  # cln-3 -> cln-4
+  peerid=$(connect_clightning_node 3 4)
+  echo "open channel from cln-3 to cln-4"
+  lightning-cli-sim 3 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
+
+  # cln-3 -> cln-5
+  peerid=$(connect_clightning_node 3 5)
+  echo "open channel from cln-3 to cln-5"
+  lightning-cli-sim 3 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
+
+  # cln-4 -> cln-5
+  peerid=$(connect_clightning_node 4 5)
+  echo "open channel from cln-4 to cln-5"
+  lightning-cli-sim 4 fundchannel -k id=$peerid amount=$channel_size push_msat=$balance_size_msat > /dev/null
+
   bitcoin-cli-sim -generate 10 > /dev/null
   wait-for-clightning-channel 1
   wait-for-clightning-channel 2
   wait-for-clightning-channel 3
+  wait-for-clightning-channel 4
+  wait-for-clightning-channel 5
   lightning-sync
 
   echo "wait for 15s... warmup..."

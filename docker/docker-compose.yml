@@ -47,3 +47,29 @@ services:
     volumes:
       - ./data/clightning-3:/root/.lightning/
       - ./circular:/circular
+
+  clightning-4:
+    hostname: clightning-4
+    depends_on:
+      - bitcoind
+    image: boltz/c-lightning:0.12.1
+    entrypoint: "sh -c 'sleep 15 && lightningd --large-channels --network regtest --bind-addr=0.0.0.0:9735 --bitcoin-rpcconnect=bitcoind --bitcoin-rpcport=18443 --bitcoin-rpcuser=balanzierer --bitcoin-rpcpassword=balanzierer'"
+    expose:
+      - 9735
+      - 8222
+    volumes:
+      - ./data/clightning-4:/root/.lightning/
+      - ./circular:/circular
+
+  clightning-5:
+    hostname: clightning-5
+    depends_on:
+      - bitcoind
+    image: boltz/c-lightning:0.12.1
+    entrypoint: "sh -c 'sleep 15 && lightningd --large-channels --network regtest --bind-addr=0.0.0.0:9735 --bitcoin-rpcconnect=bitcoind --bitcoin-rpcport=18443 --bitcoin-rpcuser=balanzierer --bitcoin-rpcpassword=balanzierer'"
+    expose:
+      - 9735
+      - 8222
+    volumes:
+      - ./data/clightning-5:/root/.lightning/
+      - ./circular:/circular
